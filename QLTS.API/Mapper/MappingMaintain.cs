@@ -12,10 +12,14 @@ namespace QLTS.API.Mapper
             CreateMap<Maintain, GetMaintainDto>();
 
             CreateMap<CreateMaintainDto, Maintain>()
-                .ForMember(dest => dest.EndDate, opt => opt.Ignore())
-                .ForMember(dest => dest.TotalCost, opt => opt.Ignore());
+                .ForMember(m => m.EndDate, opt => opt.Ignore())
+                .ForMember(m => m.TotalCost, opt => opt.Ignore());
 
             CreateMap<UpdateMaintainDto, Maintain>();
+
+            //CreateMap<Maintain, UpdateMaintainDto>()
+            //    .ForMember(u => u.AssetId, m => m.MapFrom(s => s.Asset.Id))
+            //    .ForMember(u => u.CategoryId, );
         }
     }
 }

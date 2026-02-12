@@ -11,7 +11,7 @@ namespace QLTS.Core.Entities
     public class AppUser : IdentityUser
     {
         public string DisplayName { get; set; }
-        public string Role { get; set; }
+        public string Role {  get; set; }
         public string Code { get; set; }
     }
      

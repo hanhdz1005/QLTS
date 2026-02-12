@@ -22,7 +22,7 @@ namespace QLTS.API.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("Get-all-maintain")]
+        [HttpGet]
         public async Task<ActionResult> GetAll(
             [FromQuery] int pageIndex = 1,
             [FromQuery] int pageSize = 10,
@@ -33,8 +33,7 @@ namespace QLTS.API.Controllers
             if (pageSize <= 0) pageSize = 5;
 
             var query = _uow.MaintainRepository
-                .Query(m => m.Asset, m => m.Category, m => m.Employee)
-                .AsQueryable();
+                .Query(m => m.Asset, m => m.Category, m => m.Employee);
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -51,10 +50,17 @@ namespace QLTS.API.Controllers
             var totalCount = await query.CountAsync();
 
             if (totalCount == 0)
-                return NotFound(new
+                return Ok(new
                 {
-                    Success = false,
-                    Message = "No maintain records found."
+                    Success = true,
+                    Message = "We don't have any maintain yet.",
+                    Data = new
+                    {
+                        PageIndex = pageIndex,
+                        PageSize = pageSize,
+                        TotalCount = totalCount,
+                        TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                    }
                 });
 
             var items = await query
@@ -79,7 +85,7 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpGet("Get-by-id:{id:guid}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult> GetById(Guid id)
         {
             var maintain = await _uow.MaintainRepository
@@ -101,7 +107,7 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpPost("Add-new-maintain")]
+        [HttpPost]
         public async Task<ActionResult> Create(CreateMaintainDto dto)
         {
             if (!ModelState.IsValid)
@@ -147,7 +153,7 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpPut("Update-maintain-by-id:{id}")]
+        [HttpPut("{id}")]
         public async Task<ActionResult> Update(Guid id, UpdateMaintainDto dto)
         {
             var existMaintain = await _uow.MaintainRepository.GetAsync(id);
@@ -199,7 +205,7 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpDelete("Delete-maintain-by-id:{id}")]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(Guid id)
         {
             var existMaintain = await _uow.MaintainRepository.GetAsync(id);

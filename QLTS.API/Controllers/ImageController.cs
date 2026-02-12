@@ -16,7 +16,7 @@ namespace QLTS.API.Controllers
             _environment = environment;
         }
 
-        [HttpPost("Upload_image")]
+        [HttpPost("Upload")]
         public async Task<IActionResult> UploadImage( IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -52,7 +52,7 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpGet("Get_all_images")]
+        [HttpGet]
         public async Task<IActionResult> GetAllImages()
         {
             var uploadsFolder = Path.Combine(

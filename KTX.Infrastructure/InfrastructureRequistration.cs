@@ -40,6 +40,9 @@ namespace QLTS.Infrastructure
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
             services.AddMemoryCache();
+
+            services.AddScoped<UserManager<AppUser>>();
+
             //services.AddAuthentication(opt =>
             //{
             //    opt.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;

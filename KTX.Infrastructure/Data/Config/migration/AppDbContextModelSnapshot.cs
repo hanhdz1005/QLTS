@@ -8,7 +8,7 @@ using QLTS.Infrastructure;
 
 #nullable disable
 
-namespace QLTS.Infrastructure.Data.migration
+namespace QLTS.Infrastructure.Data.Config.migration
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot

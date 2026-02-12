@@ -8,11 +8,12 @@ using System.Threading.Tasks;
 using System.Reflection;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using QLTS.Infrastructure.Data.Config;
+using Microsoft.AspNetCore.Identity;
 
 
 namespace QLTS.Infrastructure
 {
-    public class AppDbContext : IdentityDbContext<AppUser>
+    public class AppDbContext : IdentityDbContext<AppUser, IdentityRole, string>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)

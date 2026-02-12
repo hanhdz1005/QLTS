@@ -23,7 +23,7 @@ namespace QLTS.API.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("Get_all_assets")]
+        [HttpGet]
         public async Task<ActionResult> GetALL(
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 10,
@@ -48,10 +48,17 @@ namespace QLTS.API.Controllers
             var totalCount = await query.CountAsync();
 
             if (totalCount == 0)
-                return NotFound(new
+                return Ok(new
                 {
-                    Success = false,
-                    Message = "No employees found.",
+                    Success = true,
+                    Message = "We dont have any employee yet.",
+                    Data = new
+                    {
+                        PageIndex = pageIndex,
+                        PageSize = pageSize,
+                        TotalCount = totalCount,
+                        TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                    }
                 });
 
             var items = await query
@@ -79,7 +86,7 @@ namespace QLTS.API.Controllers
 
 
 
-        [HttpGet("Get_by_Id:{id:guid}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Employees>> GetEmployeeById(Guid id)
         {
             var employee = await _uow.EmployeeRepository.Query(c => c.Departments).FirstOrDefaultAsync(a => a.Id == id);
@@ -98,7 +105,7 @@ namespace QLTS.API.Controllers
 
         }
 
-        [HttpPost("Add_new_employee")]
+        [HttpPost]
         public async Task<ActionResult> AddEmployeeById(AddEmployeeDto employee)
         {
             if (!ModelState.IsValid) return BadRequest(new
@@ -149,7 +156,7 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpPut("Update_employee_by_id:{id}")]
+        [HttpPut("{id}")]
         public async Task<ActionResult> UpdateEmployeeById(Guid id, AddEmployeeDto employee)
         {
             var existEmployee = await _uow.EmployeeRepository.Query(c => c.Departments).FirstOrDefaultAsync(a => a.Id == id);
@@ -191,7 +198,7 @@ namespace QLTS.API.Controllers
         }
 
 
-        [HttpDelete("Delete_employee_by_id:{id}")]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteEmployeeById(Guid id)
         {
             var existEmployee = await _uow.EmployeeRepository.GetAsync(id);

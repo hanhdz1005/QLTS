@@ -22,7 +22,7 @@ namespace QLTS.API.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("Get_all_departments")]
+        [HttpGet]
         public async Task<ActionResult> GetALL(
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 10,
@@ -32,8 +32,7 @@ namespace QLTS.API.Controllers
             if (pageSize <= 0) pageSize = 5;
 
             var query = _uow.DepartmentRepository
-                .Query()
-                .AsQueryable();
+                .Query();
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -46,10 +45,17 @@ namespace QLTS.API.Controllers
             var totalCount = await query.CountAsync();
 
             if (totalCount == 0)
-                return NotFound(new
+                return Ok(new
                 {
-                    Success = false,
-                    Message = "No departments found.",
+                    Success = true,
+                    Message = "We don't have any department yet.",
+                    Data = new
+                    {
+                        PageIndex = pageIndex,
+                        PageSize = pageSize,
+                        TotalCount = totalCount,
+                        TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                    }
                 });
 
             var items = await query
@@ -76,7 +82,7 @@ namespace QLTS.API.Controllers
         }
 
 
-        [HttpGet("Get_by_Id:{id:guid}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Departments>> GetDepartmentById(Guid id)
         {
             var department = await _uow.DepartmentRepository.GetAsync(id);
@@ -95,8 +101,8 @@ namespace QLTS.API.Controllers
 
         }
 
-        [HttpPost("Add_new_department")]
-        public async Task<ActionResult> AddDepartmentById(AddDepartmentDto department)
+        [HttpPost]
+        public async Task<ActionResult> AddDepartment(AddDepartmentDto department)
         {
             if (!ModelState.IsValid) return BadRequest(new
             {
@@ -128,7 +134,7 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpPut("Update_department_by_id:{id}")]
+        [HttpPut("{id}")]
         public async Task<ActionResult> UpdateDepartmentById(Guid id, AddDepartmentDto department)
         {
             var existDepartment = await _uow.DepartmentRepository.GetAsync(id);
@@ -154,7 +160,7 @@ namespace QLTS.API.Controllers
 
         }
 
-        [HttpDelete("Delete_department_by_id:{id}")]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteDepartmentById(Guid id)
         {
             var existDepartment = await _uow.DepartmentRepository.GetAsync(id);

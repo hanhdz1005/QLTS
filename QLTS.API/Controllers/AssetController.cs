@@ -22,12 +22,11 @@ namespace QLTS.API.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("Get-all-asset")]
+        [HttpGet("filter")]
         public async Task<ActionResult> GetALL(
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] string? search = null
-)
+        [FromQuery] string? search = null)
         {
             if (pageIndex <= 0) pageIndex = 1;
             if (pageSize <= 0) pageSize = 5;
@@ -50,10 +49,17 @@ namespace QLTS.API.Controllers
             var totalCount = await query.CountAsync();
 
             if (totalCount == 0)
-                return NotFound(new
+                return Ok(new
                 {
-                    Success = false,
-                    Message = "No assets found.",
+                    Success = true,
+                    Message = "We don't have any asset yet.",
+                    Data = new
+                    {
+                        PageIndex = pageIndex,
+                        PageSize = pageSize,
+                        TotalCount = totalCount,
+                        TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                    }
                 });
 
             var items = await query
@@ -79,7 +85,7 @@ namespace QLTS.API.Controllers
         }
 
 
-        [HttpGet("Get-by-id:{id:guid}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Assets>> GetAssetById(Guid id)
         {
             var asset = await _uow.AssetRepository.Query(c => c.Category).FirstOrDefaultAsync(a => a.Id == id);
@@ -98,7 +104,7 @@ namespace QLTS.API.Controllers
 
         }
 
-        [HttpPost("Add-new-asset")]
+        [HttpPost()]
         public async Task<ActionResult> AddAssetById(AddAssetDto asset)
         {
             if (!ModelState.IsValid) return BadRequest(new
@@ -142,7 +148,7 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpPut("Update-asset-by-id:{id}")]
+        [HttpPut("{id}")]
         public async Task<ActionResult> UpdateAssetById(Guid id, AddAssetDto asset)
         {
             var existAsset = await _uow.AssetRepository.GetAsync(id);
@@ -184,7 +190,7 @@ namespace QLTS.API.Controllers
 
         }
 
-        [HttpDelete("Delete-asset-by-id:{id}")]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteAssetById(Guid id)
         {
             var existAsset = await _uow.AssetRepository.GetAsync(id);

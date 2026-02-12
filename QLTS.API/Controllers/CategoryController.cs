@@ -23,7 +23,7 @@ namespace QLTS.API.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("Get_all_categories")]
+        [HttpGet]
         public async Task<ActionResult> GetALL(
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 10,
@@ -32,9 +32,7 @@ namespace QLTS.API.Controllers
             if (pageIndex <= 0) pageIndex = 1;
             if (pageSize <= 0) pageSize = 5;
 
-            var query = _uow.CategoryRepository
-                .Query()
-                .AsQueryable();
+            var query = _uow.CategoryRepository.Query();
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -45,13 +43,18 @@ namespace QLTS.API.Controllers
             }
 
             var totalCount = await query.CountAsync();
-
-            if (totalCount == 0)
-                return NotFound(new
+            if (totalCount == 0) return Ok(new
+            {
+                Success = true,
+                Message = "We don't have any category.",
+                Data = new
                 {
-                    Success = false,
-                    Message = "No categories found.",
-                });
+                    PageIndex = pageIndex,
+                    PageSize = pageSize,
+                    TotalCount = totalCount,
+                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                }
+            });
 
             var items = await query
                 .OrderBy(c => c.Name)
@@ -79,15 +82,16 @@ namespace QLTS.API.Controllers
 
 
 
-        [HttpGet("Get_by_Id:{id:guid}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Categories>> GetCategoryById(Guid id)
         {
             var category = await _uow.CategoryRepository.GetAsync(id);
-            if (category == null) return NotFound(new
-            {
-                Success = false,
-                Message = $"Are u sure that this id is correct?"
-            });
+            if (category == null)
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = $"Are u sure that this id is correct?"
+                });
 
             return Ok(new
             {
@@ -98,7 +102,7 @@ namespace QLTS.API.Controllers
 
         }
 
-        [HttpPost("Add_new_category")]
+        [HttpPost]
         public async Task<ActionResult> AddCategoryById(AddCategoryDto category)
         {
             if (!ModelState.IsValid) return BadRequest(new
@@ -129,7 +133,7 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpPut("Update_category_by_id:{id}")]
+        [HttpPut("{id}")]
         public async Task<ActionResult> UpdateCategoryById(Guid id, AddCategoryDto category)
         {
             var existCategory = await _uow.CategoryRepository.GetAsync(id);
@@ -154,7 +158,7 @@ namespace QLTS.API.Controllers
 
         }
 
-        [HttpDelete("Delete_category_by_id:{id}")]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteCategoryById(Guid id)
         {
             var existCategory = await _uow.CategoryRepository.GetAsync(id);

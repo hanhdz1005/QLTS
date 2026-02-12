@@ -9,10 +9,10 @@ using QLTS.Infrastructure;
 
 #nullable disable
 
-namespace QLTS.Infrastructure.Data.migration
+namespace QLTS.Infrastructure.Data.Config.migration
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260206024253_in")]
+    [Migration("20260212033659_in")]
     partial class @in
     {
         /// <inheritdoc />
@@ -158,31 +158,6 @@ namespace QLTS.Infrastructure.Data.migration
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("QLTS.Core.Entities.Address", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AppUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AppUserId");
-
-                    b.ToTable("Addresses");
-                });
-
             modelBuilder.Entity("QLTS.Core.Entities.AppUser", b =>
                 {
                     b.Property<string>("Id")
@@ -270,6 +245,14 @@ namespace QLTS.Infrastructure.Data.migration
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImgUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -334,6 +317,10 @@ namespace QLTS.Infrastructure.Data.migration
                     b.Property<Guid>("DeptId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DeptName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -349,6 +336,68 @@ namespace QLTS.Infrastructure.Data.migration
                     b.HasIndex("DeptId");
 
                     b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("QLTS.Core.Entities.Maintain", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AssetName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("MaintainHost")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RequestDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalCost")
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssetId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("Maintains");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -402,17 +451,6 @@ namespace QLTS.Infrastructure.Data.migration
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("QLTS.Core.Entities.Address", b =>
-                {
-                    b.HasOne("QLTS.Core.Entities.AppUser", "appUser")
-                        .WithMany()
-                        .HasForeignKey("AppUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("appUser");
-                });
-
             modelBuilder.Entity("QLTS.Core.Entities.Assets", b =>
                 {
                     b.HasOne("QLTS.Core.Entities.Categories", "Category")
@@ -435,14 +473,53 @@ namespace QLTS.Infrastructure.Data.migration
                     b.Navigation("Departments");
                 });
 
+            modelBuilder.Entity("QLTS.Core.Entities.Maintain", b =>
+                {
+                    b.HasOne("QLTS.Core.Entities.Assets", "Asset")
+                        .WithMany("Maintain")
+                        .HasForeignKey("AssetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QLTS.Core.Entities.Categories", "Category")
+                        .WithMany("Maintain")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QLTS.Core.Entities.Employees", "Employee")
+                        .WithMany("Maintain")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Asset");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("QLTS.Core.Entities.Assets", b =>
+                {
+                    b.Navigation("Maintain");
+                });
+
             modelBuilder.Entity("QLTS.Core.Entities.Categories", b =>
                 {
                     b.Navigation("Assets");
+
+                    b.Navigation("Maintain");
                 });
 
             modelBuilder.Entity("QLTS.Core.Entities.Departments", b =>
                 {
                     b.Navigation("Employees");
+                });
+
+            modelBuilder.Entity("QLTS.Core.Entities.Employees", b =>
+                {
+                    b.Navigation("Maintain");
                 });
 #pragma warning restore 612, 618
         }

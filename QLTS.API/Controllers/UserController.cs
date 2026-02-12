@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QLTS.Core.Entities;
@@ -16,15 +17,19 @@ namespace QLTS.API.Controllers
     {
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly UserManager<AppUser> _userManager;
 
 
-        public UserController(IUserService userService, IMapper mapper)
+        public UserController(IUserService userService, IMapper mapper, RoleManager<IdentityRole> roleManager, UserManager<AppUser> userManager)
         {
             _userService = userService;
             _mapper = mapper;
+            _roleManager = roleManager;
+            _userManager = userManager;
         }
 
-        [HttpGet("Get_all_users")]
+        [HttpGet]
         public async Task<ActionResult> GetAllUser(
          [FromQuery] int pageIndex = 1,
          [FromQuery] int pageSize = 10,
@@ -50,7 +55,11 @@ namespace QLTS.API.Controllers
 
             if (totalUsers == 0)
             {
-                return NotFound("No users found.");
+                return Ok(new
+                {
+                    Success = true,
+                    Message = "We don't have any user yet."
+                });
             }
 
             var users = await query
@@ -76,7 +85,7 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpGet("Get-user-by-id/{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<GetUserDto>> GetUserById (string id)
         {
             var user = await _userService.GetUserByIdAsync(id);
@@ -93,25 +102,23 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpPut("Update-user-role/{id},{role}")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUserRoleById (string id,string role )
         {
             var user = await _userService.GetUserByIdAsync(id);
             if (user == null) return NotFound("User not found.");
-
-            if (role == null)
-                return Ok(new
-                {
-                    Success = true,
-                    Message = $"User role is still {id}"
-                });
+            var Role = await _roleManager.FindByNameAsync(role);
+            if (Role == null) return NotFound("Role not found");
 
             var result = await _userService.UpdateUserRoleAsync(id, role);
             if (!result)
             {
                 return BadRequest("Failed to update user role.");
             }
+
+
             var updatedUser = await _userService.GetUserByIdAsync(id);
+            await _userManager.AddToRoleAsync(updatedUser, Role.Name);
             var data = _mapper.Map<GetUserDto>(updatedUser);
             return Ok(new
             {
@@ -122,7 +129,7 @@ namespace QLTS.API.Controllers
             });
         }
 
-        [HttpDelete("Delete-user-by-id/{id}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUserById (string id)
         {
             var user = await _userService.GetUserByIdAsync(id);

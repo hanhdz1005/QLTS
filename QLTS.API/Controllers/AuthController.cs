@@ -6,13 +6,13 @@ using QLTS.Core.Entities;
 using QLTS.Core.Interface;
 using QLTS.Infrastructure;
 using QLTS.Infrastructure.Data.Dtos;
+using System.Data;
 using System.Security.Claims;
 
 namespace QLTS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
     public class AuthController : ControllerBase
     {
         private readonly UserManager<AppUser> _userManager;
@@ -38,23 +38,29 @@ namespace QLTS.API.Controllers
         public async Task<IActionResult> Login(LoginDto Dto)
         {
             var user = await _userManager.FindByEmailAsync(Dto.Email);
-            if (user == null) return Unauthorized("Invalid email.");
-            var result = await _signInManager.CheckPasswordSignInAsync(user, Dto.Password, false);
-            if (!result.Succeeded) return Unauthorized("Wrong password.");
-
-            return Ok(new UserDto
+            if (user == null) return Unauthorized(new
             {
-                Id = Guid.Parse(user.Id),
-                DisplayName = user.DisplayName,
-                Email = user.Email,
-                Token = _tokenService.CreateToken(user),
-                Role = user.Role,
-                Code = user.Code
+                Success = false,
+                Message = "Invalid email."
+            });
+            var result = await _signInManager.CheckPasswordSignInAsync(user, Dto.Password, false);
+            if (!result.Succeeded) return Unauthorized(new
+            {
+                Success = false,
+                Message = "Wrong password"
+            });
+
+            return Ok(new 
+            {
+                Succcess = true,
+                Message = "Login successful.",
+                Data = new {
+                    Token = _tokenService.CreateToken(user)
+                }
             });
         }
 
-        [HttpGet("checkEmail")]
-        public async Task<ActionResult<bool>> CheckEmail([FromQuery] string email)
+        private async Task<bool> CheckEmail([FromQuery] string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
             if (user != null) return true;
@@ -64,7 +70,8 @@ namespace QLTS.API.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> Register(RegisterDto Dto)
         {
-            if (CheckEmail(Dto.Email).Result.Value)
+            var isCheckEmail = await CheckEmail(Dto.Email);
+            if (isCheckEmail)
             {
                 return BadRequest("Email already in use.");
 
@@ -78,21 +85,26 @@ namespace QLTS.API.Controllers
             };
             user.Code = user.DisplayName.ToUpper();
             var result = await _userManager.CreateAsync(user, Dto.Password);
+            await _userManager.AddToRoleAsync(user, user.Role);
             if (!result.Succeeded) return BadRequest("Register failed.");
             var userId = user.Id;
-            return Ok(new UserDto
+            return Ok(new 
             {
-                Id = Guid.Parse(user.Id),
-                DisplayName = user.DisplayName,
-                Email = user.Email,
-                Role = user.Role,
-                Token = _tokenService.CreateToken(user),
-                Code = user.Code
+                Success = true,
+                Message = "Register success.",
+                Data = new {
+                    id = Guid.Parse(user.Id),
+                    displayName = user.DisplayName,
+                    //email = user.Email,
+                    //role = user.Role,
+                    token = _tokenService.CreateToken(user),
+                    //code = user.Code
+                }
+                
             });
         }
 
-        [Authorize]
-        [HttpGet("get-current-user")]
+        [HttpGet("GetCurrentUser")]
         public async Task<IActionResult> GetCurrentUser()
         {
             var email = User.FindFirstValue(ClaimTypes.Email);
@@ -103,14 +115,18 @@ namespace QLTS.API.Controllers
             if (user == null)
                 return Unauthorized();
 
-            return Ok(new GetUserDto
+            return Ok(new 
             {
-                Id = Guid.Parse(user.Id),
-                DisplayName = user.DisplayName,
-                Email = user.Email,
-                Role = user.Role,
-                Code = user.Code,
-
+                Success = true,
+                Message = "Get current user success.",
+                Data = new {
+                    id = Guid.Parse(user.Id),
+                    displayName = user.DisplayName,
+                    //email = user.Email,
+                    //role = user.Role,
+                    //code = user.Code,
+                }
+                
             });
         }
 
